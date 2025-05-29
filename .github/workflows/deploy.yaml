@@ -8,6 +8,7 @@ on:
 jobs:
   deploy_app:
     uses: ./.github/workflows/deploy-app.yaml
+    secrets: inherit
     with:
       aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -21,6 +22,7 @@ jobs:
   deploy_monitoring:
     needs: deploy_app
     uses: ./.github/workflows/deploy-monitoring.yaml
+    secrets: inherit
     with:
       aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
