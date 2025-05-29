@@ -8,13 +8,13 @@ on:
 jobs:
   deploy_app:
     uses: ./.github/workflows/deploy-app.yaml
-    secrets: inherit
-    with:
-      aws_access_key_id: ${{ github.secrets.AWS_ACCESS_KEY_ID }}
-      aws_secret_access_key: ${{ github.secrets.AWS_SECRET_ACCESS_KEY }}
-      aws_region: ${{ github.secrets.AWS_REGION }}
-      aws_account_id: ${{ github.secrets.AWS_ACCOUNT_ID }}
-      ecr_repository: ${{ githubsecrets.ECR_REPOSITORY }}
+    secrets:
+      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      ecr_repository: ${{ ecrets.ECR_REPOSITORY }}
+    with:  
       cluster_name: clusteyyufg
       deployment_file: deployment.yaml
       ingress_file: ingress.yaml
