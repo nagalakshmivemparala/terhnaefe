@@ -1,0 +1,29 @@
+name: Full Deploy Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy_app:
+    uses: ./.github/workflows/deploy-app.yaml
+    with:
+      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      ecr_repository: ${{ secrets.AWS_ACCOUNT_ID }}
+      cluster_name: clusteyyufg
+      deployment_file: deployment.yaml
+      ingress_file: ingress.yaml
+
+  deploy_monitoring:
+    needs: deploy_app
+    uses: ./.github/workflows/deploy-monitoring.yaml
+    with:
+      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      cluster_name: clusteyyufg

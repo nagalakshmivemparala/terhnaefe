@@ -18,3 +18,18 @@ spec:
             name: httpd
             port:
               number: 80
+      - path: /grafana(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 80
+
+      - path: /prometheus(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: prometheus-operated
+            port:
+              number: 9090

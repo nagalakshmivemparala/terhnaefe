@@ -1,0 +1,60 @@
+name: Deploy Monitoring
+
+on:
+  workflow_call:
+    inputs:
+      aws_access_key_id:
+        required: true
+        type: string
+      aws_secret_access_key:
+        required: true
+        type: string
+      aws_region:
+        required: true
+        type: string
+      aws_account_id:
+        required: true
+        type: string
+      cluster_name:
+        required: true
+        type: string
+
+jobs:
+  deploy_monitoring:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Configure AWS CLI
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.aws_access_key_id }}
+        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+        aws-region: ${{ inputs.aws_region }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.32.0'
+
+    - name: Configure kubectl for EKS
+      run: |
+        aws eks update-kubeconfig --name ${{ inputs.cluster_name }} --region ${{ inputs.aws_region }}
+
+    - name: Add Prometheus Helm repo
+      run: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+    - name: Update Helm repos
+      run: helm repo update
+
+    - name: Install/Upgrade kube-prometheus-stack
+      run: |
+        helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+          --namespace monitoring --create-namespace \
+          --set grafana.ingress.enabled=false \
+          --set grafana.server.rootUrl="%(protocol)s://%(domain)s:%(http_port)s/grafana/" \
+          --set grafana.server.serveFromSubPath=true \
+          --set prometheus.ingress.enabled=false \
+          --set prometheus.server.basePath=/prometheus

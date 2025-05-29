@@ -1,0 +1,90 @@
+name: Deploy App
+
+on:
+  workflow_call:
+    inputs:
+      aws_access_key_id:
+        required: true
+        type: string
+      aws_secret_access_key:
+        required: true
+        type: string
+      aws_region:
+        required: true
+        type: string
+      aws_account_id:
+        required: true
+        type: string
+      ecr_repository:
+        required: true
+        type: string
+      cluster_name:
+        required: true
+        type: string
+      deployment_file:
+        required: true
+        type: string
+      ingress_file:
+        required: true
+        type: string
+     
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Configure AWS CLI
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.aws_access_key_id }}
+        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+        aws-region: ${{ inputs.aws_region }}
+
+    - name: Log in to Amazon ECR
+      run: |
+        aws ecr get-login-password --region ${{ inputs.aws_region }} | docker login --username AWS --password-stdin ${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com
+
+    - name: Pull official Nginx image
+      run: docker pull httpd:latest
+
+    - name: Tag Docker image
+      run: |
+        docker tag httpd:latest ${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com/${{ inputs.ecr_repository }}:latest
+
+    - name: Push Docker image to ECR
+      run: |
+        docker push ${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com/${{ inputs.ecr_repository }}:latest
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.32.0'
+
+    - name: Configure kubectl for EKS
+      run: |
+        aws eks update-kubeconfig --name ${{ inputs.cluster_name }} --region ${{ inputs.aws_region }}
+
+    - name: Check and install NGINX Ingress Controller
+      run: |
+        if ! kubectl get ns ingress-nginx > /dev/null 2>&1; then
+          echo "Installing ingress controller..."
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.1/deploy/static/provider/cloud/deploy.yaml
+        else
+          echo "Ingress controller already installed."
+        fi
+
+    - name: Wait for ingress controller to be ready
+      run: kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=180s
+
+    - name: Deploy application manifests
+      run: |
+        kubectl apply -f ${{ inputs.deployment_file }}
+        kubectl apply -f ${{ inputs.ingress_file }}
+
+    - name: Wait for app deployment rollout
+      run: |
+        kubectl rollout status deployment/${{ inputs.app_deployment_name }} --timeout=120s
