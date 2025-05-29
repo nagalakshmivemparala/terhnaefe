@@ -3,6 +3,13 @@ name: Deploy App
 on:
   workflow_call:
     inputs:
+      deployment_file:
+        required: true
+        type: string
+      ingress_file:
+        required: true
+        type: string
+      
       aws_access_key_id:
         required: true
         type: string
@@ -21,13 +28,8 @@ on:
       cluster_name:
         required: true
         type: string
-      deployment_file:
-        required: true
-        type: string
-      ingress_file:
-        required: true
-        type: string
-        
+     
+
 permissions:
   contents: read    
 
