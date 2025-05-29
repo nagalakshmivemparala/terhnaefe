@@ -2,22 +2,11 @@ name: Deploy Monitoring
 
 on:
   workflow_call:
-    inputs:
-      aws_access_key_id:
+    inputs:       # Use secrets here, not inputs, for sensitive data 
+      CLUSTER_NAME:
         required: true
         type: string
-      aws_secret_access_key:
-        required: true
-        type: string
-      aws_region:
-        required: true
-        type: string
-      aws_account_id:
-        required: true
-        type: string
-      cluster_name:
-        required: true
-        type: string
+
 jobs:
   deploy_monitoring:
     runs-on: ubuntu-latest
@@ -29,9 +18,9 @@ jobs:
     - name: Configure AWS CLI
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ inputs.aws_access_key_id }}
-        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
-        aws-region: ${{ inputs.aws_region }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Setup kubectl
       uses: azure/setup-kubectl@v3
@@ -40,7 +29,7 @@ jobs:
 
     - name: Configure kubectl for EKS
       run: |
-        aws eks update-kubeconfig --name ${{ inputs.cluster_name }} --region ${{ inputs.aws_region }}
+        aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
 
     - name: Add Prometheus Helm repo
       run: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
