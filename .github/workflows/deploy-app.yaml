@@ -12,17 +12,8 @@ on:
       CLUSTER_NAME:
         required: true  
         type: string
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-      AWS_REGION:
-        required: true
-      AWS_ACCOUNT_ID:
-        required: true
-      ECR_REPOSITORY:
-        required: true
+      
+
       
 
 permissions:
