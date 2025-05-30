@@ -1,94 +1,94 @@
-name: Deploy App
+# name: Deploy App
 
-on:
-  workflow_call:
-    inputs:
-      deployment_file:
-        required: true
-        type: string
-      ingress_file:
-        required: true
-        type: string
-      cluster_name:
-        required: true  
-        type: string
-      aws_access_key_id:
-        required: true
-        type: string
-      aws_secret_access_key:
-        required: true
-        type: string
-      aws_region:
-        required: true
-        type: string
-      aws_account_id:
-        required: true
-        type: string
-      ecr_repository:
-        required: true
-        type: string
+# on:
+#   workflow_call:
+#     inputs:
+#       deployment_file:
+#         required: true
+#         type: string
+#       ingress_file:
+#         required: true
+#         type: string
+#       cluster_name:
+#         required: true  
+#         type: string
+#       aws_access_key_id:
+#         required: true
+#         type: string
+#       aws_secret_access_key:
+#         required: true
+#         type: string
+#       aws_region:
+#         required: true
+#         type: string
+#       aws_account_id:
+#         required: true
+#         type: string
+#       ecr_repository:
+#         required: true
+#         type: string
 
       
 
-permissions:
-  contents: read
+# permissions:
+#   contents: read
 
-jobs:
-  build_and_deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   build_and_deploy:
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v2
+#     steps:
+#     - name: Checkout repo
+#       uses: actions/checkout@v2
 
-    - name: Configure AWS CLI
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+#     - name: Configure AWS CLI
+#       uses: aws-actions/configure-aws-credentials@v1
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Log in to Amazon ECR
-      run: |
-        aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+#     - name: Log in to Amazon ECR
+#       run: |
+#         aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-    - name: Pull official Nginx image
-      run: docker pull httpd:latest
+#     - name: Pull official Nginx image
+#       run: docker pull httpd:latest
 
-    - name: Tag Docker image
-      run: |
-        docker tag httpd:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+#     - name: Tag Docker image
+#       run: |
+#         docker tag httpd:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
-    - name: Push Docker image to ECR
-      run: |
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+#     - name: Push Docker image to ECR
+#       run: |
+#         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.32.0'
+#     - name: Setup kubectl
+#       uses: azure/setup-kubectl@v3
+#       with:
+#         version: 'v1.32.0'
 
-    - name: Configure kubectl for EKS
-      run: |
-        aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
+#     - name: Configure kubectl for EKS
+#       run: |
+#         aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
 
-    - name: Check and install NGINX Ingress Controller
-      run: |
-        if ! kubectl get ns ingress-nginx > /dev/null 2>&1; then
-          echo "Installing ingress controller..."
-          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.1/deploy/static/provider/cloud/deploy.yaml
-        else
-          echo "Ingress controller already installed."
-        fi
+#     - name: Check and install NGINX Ingress Controller
+#       run: |
+#         if ! kubectl get ns ingress-nginx > /dev/null 2>&1; then
+#           echo "Installing ingress controller..."
+#           kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.1/deploy/static/provider/cloud/deploy.yaml
+#         else
+#           echo "Ingress controller already installed."
+#         fi
 
-    - name: Wait for ingress controller to be ready
-      run: kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=180s
+#     - name: Wait for ingress controller to be ready
+#       run: kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=180s
 
-    - name: Deploy application manifests
-      run: |
-        kubectl apply -f ${{ inputs.deployment_file }}
-        kubectl apply -f ${{ inputs.ingress_file }}
+#     - name: Deploy application manifests
+#       run: |
+#         kubectl apply -f ${{ inputs.deployment_file }}
+#         kubectl apply -f ${{ inputs.ingress_file }}
 
-    - name: Wait for app deployment rollout
-      run: |
-        kubectl rollout status deployment/${{ inputs.app_deployment_name }} --timeout=120s
+#     - name: Wait for app deployment rollout
+#       run: |
+#         kubectl rollout status deployment/${{ inputs.app_deployment_name }} --timeout=120s
