@@ -61,7 +61,7 @@ jobs:
 
     - name: Deploy application manifests
       run: |
-        kubectl apply -f deploy.yaml
+        kubectl apply -f deployment.yaml
         kubectl apply -f ingress.yaml
 
     - name: Wait for app deployment rollout
