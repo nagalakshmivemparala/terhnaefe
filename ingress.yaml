@@ -22,7 +22,7 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: grafana
+            name: monitoring-grafana
             port:
               number: 80
 
@@ -30,6 +30,6 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: prometheus-operated
+            name: monitoring-kube-prometheus-prometheus
             port:
               number: 9090
