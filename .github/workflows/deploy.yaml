@@ -102,9 +102,10 @@ jobs:
     - name: Install/Upgrade kube-prometheus-stack
       run: |
         helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
-          --namespace monitoring --create-namespace \
-          --set grafana.ingress.enabled=false \
-          --set grafana.server.rootUrl="%(protocol)s://%(domain)s:%(http_port)s/grafana/" \
-          --set grafana.server.serveFromSubPath=true \
-          --set prometheus.ingress.enabled=false \
-          --set prometheus.server.basePath=/prometheus
+        --namespace monitoring --create-namespace \
+        --set prometheus.prometheusSpec.maximumStartupDurationSeconds=300 \
+        --set grafana.ingress.enabled=false \
+        --set grafana.server.rootUrl="%(protocol)s://%(domain)s:%(http_port)s/grafana/" \
+        --set grafana.server.serveFromSubPath=true \
+        --set prometheus.ingress.enabled=false \
+        --set prometheus.server.basePath=/prometheus
