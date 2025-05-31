@@ -70,55 +70,55 @@ jobs:
 
       # Replace `my-app` with your actual app deployment name
 
-  deploy_monitoring:
-    needs: deploy_app
-    runs-on: ubuntu-latest
+  # deploy_monitoring:
+  #   needs: deploy_app
+  #   runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v2
+  #   steps:
+  #   - name: Checkout repo
+  #     uses: actions/checkout@v2
 
-    - name: Configure AWS CLI
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+  #   - name: Configure AWS CLI
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.32.0'
+  #   - name: Setup kubectl
+  #     uses: azure/setup-kubectl@v3
+  #     with:
+  #       version: 'v1.32.0'
 
-    - name: Configure kubectl for EKS
-      run: |
-        aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
+  #   - name: Configure kubectl for EKS
+  #     run: |
+  #       aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
 
-    - name: Add Prometheus Helm repo
-      run: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  #   - name: Add Prometheus Helm repo
+  #     run: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
-    - name: Update Helm repos
-      run: helm repo update
+  #   - name: Update Helm repos
+  #     run: helm repo update
 
-    - name: Install/Upgrade kube-prometheus-stack
-      run: |
-        helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
-        --namespace monitoring --create-namespace \
-        --set prometheus.prometheusSpec.maximumStartupDurationSeconds=300 \
-        --set grafana.ingress.enabled=false \
-        --set grafana.ingress.path="/grafana" \
-        --set grafana.ingress.pathType="Prefix" \
-        --set grafana.ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"="/" \
-        --set prometheus.ingress.enabled=false \
-        --set prometheus.ingress.path="/prometheus" \
-        --set prometheus.ingress.pathType="Prefix" \
-        --set prometheus.ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"="/" \
-        --set ingress-nginx.enabled=false  # assuming you're handling ingress yourself
+  #   - name: Install/Upgrade kube-prometheus-stack
+  #     run: |
+  #       helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+  #       --namespace monitoring --create-namespace \
+  #       --set prometheus.prometheusSpec.maximumStartupDurationSeconds=300 \
+  #       --set grafana.ingress.enabled=false \
+  #       --set grafana.ingress.path="/grafana" \
+  #       --set grafana.ingress.pathType="Prefix" \
+  #       --set grafana.ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"="/" \
+  #       --set prometheus.ingress.enabled=false \
+  #       --set prometheus.ingress.path="/prometheus" \
+  #       --set prometheus.ingress.pathType="Prefix" \
+  #       --set prometheus.ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"="/" \
+  #       --set ingress-nginx.enabled=false  # assuming you're handling ingress yourself
 
 
-    - name: Apply monitoring ingress
-      run: |
-        kubectl apply -f monitoring-ingress.yaml  # namespace: monitoring   
+  #   - name: Apply monitoring ingress
+  #     run: |
+  #       kubectl apply -f monitoring-ingress.yaml  # namespace: monitoring   
     
-    - name: Wait for Grafana to be ready
-      run: kubectl rollout status deployment/monitoring-grafana -n monitoring --timeout=180s
+  #   - name: Wait for Grafana to be ready
+  #     run: kubectl rollout status deployment/monitoring-grafana -n monitoring --timeout=180s
