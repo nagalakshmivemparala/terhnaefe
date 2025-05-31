@@ -105,11 +105,11 @@ jobs:
         helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
         --namespace monitoring --create-namespace \
         --set prometheus.prometheusSpec.maximumStartupDurationSeconds=300 \
-        --set grafana.ingress.enabled=true \
+        --set grafana.ingress.enabled=false \
         --set grafana.ingress.path="/grafana" \
         --set grafana.ingress.pathType="Prefix" \
         --set grafana.ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"="/" \
-        --set prometheus.ingress.enabled=true \
+        --set prometheus.ingress.enabled=false \
         --set prometheus.ingress.path="/prometheus" \
         --set prometheus.ingress.pathType="Prefix" \
         --set prometheus.ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"="/" \
